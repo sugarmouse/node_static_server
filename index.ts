@@ -1,37 +1,39 @@
+import * as fs from 'fs';
 import * as http from 'http';
+import * as path from 'path';
 import { REPL_MODE_SLOPPY } from 'repl';
 
 const server = http.createServer();
+const publicDir = path.resolve(__dirname, 'public');
 
 server.on("request", (request, response) => {
-  console.log('---request.method---');
-  console.log(request.method);
-  console.log('---request.url---');
-  console.log(request.url);
-  console.log('---request.headers---');
-  console.log(request.headers);
 
-  const array: any[] = [];
+  const { method, url, headers } = request;
+  switch (url) {
+    case '/index.html':
+      response.setHeader('Content-Type', 'text/html; charset=utf-8');
+      fs.readFile(path.resolve(publicDir, 'index.html'), (error, data) => {
+        if (error) throw error;
+        response.end(data.toString());
+      });
+      break;
 
-  // 通过监听 request 的 data 和 end 事件拿到 POST 请求的数据
-  request.on('data', (chunk) => {
-    console.log(`Received ${chunk.length} bytes of data.`);
-    array.push(chunk);
-  });
-  request.on('end', () => {
-    const data = Buffer.concat(array).toString();
-    console.log('---body---');
-    console.log(data);
+    case '/style.css':
+      response.setHeader('Content-Type', 'text/css; charset=utf-8');
+      fs.readFile(path.resolve(publicDir, 'style.css'), (error, data) => {
+        if (error) throw error;
+        response.end(data.toString());
+      });
+      break;
 
-    response.statusCode = 404
-    response.setHeader('who-create-the-server','tanghao')
-    
-    response.end('hi');
-  });
-
-
-  console.log('有人请求了');
-
+    case '/main.js':
+      response.setHeader('Content-Type', 'text/javascript; charset=utf-8');
+      fs.readFile(path.resolve(publicDir, 'main.js'), (error, data) => {
+        if (error) throw error;
+        response.end(data.toString());
+      });
+      break;
+  }
 });
 
 server.listen(8888, () => {
